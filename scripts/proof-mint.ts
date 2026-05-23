@@ -1,7 +1,7 @@
 import { airdropFactory, devnet, generateKeyPairSigner, lamports } from '@solana/kit'
 
 import { executeMintQuestAtlasPass } from '../src/questatlas/data-access/execute-mint-questatlas-pass'
-import { buildQuestRoute } from '../src/questatlas/data-access/questatlas-route'
+import { buildQuestRoute, createMetadataUri } from '../src/questatlas/data-access/questatlas-route'
 import { createSolanaClient } from '../src/solana/data-access/create-solana-client'
 
 const http = devnet(process.env.SOLANA_RPC_URL ?? 'https://api.devnet.solana.com')
@@ -12,6 +12,16 @@ const route = buildQuestRoute('proof-093', 7, 42)
 
 console.log(`Temporary proof signer: ${payer.address}`)
 console.log(`Route: ${route.id}`)
+
+const uri = createMetadataUri(route, payer.address)
+const preflightMetadataResponse = await fetch(uri)
+
+if (
+  !preflightMetadataResponse.ok ||
+  !preflightMetadataResponse.headers.get('content-type')?.includes('application/json')
+) {
+  throw new Error(`Metadata preflight failed for ${uri}: HTTP ${preflightMetadataResponse.status}`)
+}
 
 const airdrop = airdropFactory({ rpc: client.rpc, rpcSubscriptions: client.rpcSubscriptions })
 await airdrop({
