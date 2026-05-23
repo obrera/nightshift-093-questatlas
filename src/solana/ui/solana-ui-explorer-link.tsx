@@ -15,10 +15,22 @@ export function SolanaUiExplorerLink({
   path: ExplorerPath
 }) {
   const getExplorerUrl = useSolanaExplorer()
+  let href: null | string = null
+
+  try {
+    href = getExplorerUrl(path)
+  } catch {
+    href = null
+  }
+
+  if (!href) {
+    return <span className={className ? className : `inline-flex gap-1 font-mono text-amber-200`}>{label}</span>
+  }
+
   return (
     <a
       className={className ? className : `link inline-flex gap-1 font-mono`}
-      href={getExplorerUrl(path)}
+      href={href}
       rel="noopener noreferrer"
       target="_blank"
     >

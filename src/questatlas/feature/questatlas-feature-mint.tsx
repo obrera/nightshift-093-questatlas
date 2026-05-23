@@ -41,7 +41,7 @@ export function QuestAtlasFeatureMint({
       route={route}
       routeReadiness={routeReadiness}
       signatureLink={
-        result ? <SolanaUiExplorerLink label="Signature" path={`tx/${result.signature}` as ExplorerPath} /> : null
+        result ? <SolanaUiExplorerLink label="Signature" path={`/tx/${result.signature}` as ExplorerPath} /> : null
       }
     />
   )
