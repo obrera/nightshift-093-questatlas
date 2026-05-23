@@ -38,6 +38,9 @@ bun run lint
 bun run proof
 ```
 
+`bun run proof` generates a temporary signer and requests a small devnet airdrop by default. Set
+`PROOF_KEYPAIR_PATH=/path/to/solana-keygen.json` to use an existing funded devnet signer.
+
 ## Deployment
 
 The included `Dockerfile`, `docker-compose.yml`, and `server.ts` serve the Vite static build on port `3000` for Dokploy.
