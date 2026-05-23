@@ -1,0 +1,17 @@
+services:
+  app:
+    build: .
+    environment:
+      PORT: "3000"
+    expose:
+      - "3000"
+    networks:
+      - dokploy-network
+    restart: unless-stopped
+
+networks:
+  default:
+    external: true
+    name: dokploy-network
+  dokploy-network:
+    external: true
