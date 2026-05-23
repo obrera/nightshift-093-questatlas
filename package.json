@@ -13,7 +13,7 @@
     "lint:fix": "eslint . --fix",
     "prepare": "lefthook install",
     "preview": "vite preview",
-    "proof": "bun run --sequential check-types build"
+    "proof": "bun scripts/proof-mint.ts"
   },
   "dependencies": {
     "@base-ui/react": "1.4.0",

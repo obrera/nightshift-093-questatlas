@@ -13,8 +13,8 @@ import {
   setTransactionMessageLifetimeUsingBlockhash,
   signAndSendTransactionMessageWithSigners,
   type TransactionMessageBytesBase64,
+  type TransactionSigner,
 } from '@solana/kit'
-import { type useWalletUiSigner } from '@wallet-ui/react'
 
 import type { SolanaClient } from '@/solana/data-access/solana-client'
 
@@ -22,6 +22,7 @@ import {
   createMetadataUri,
   createQuestAtlasMetadata,
   getRouteHash,
+  type QuestAtlasMetadata,
   type QuestRoute,
 } from '@/questatlas/data-access/questatlas-route'
 
@@ -42,11 +43,11 @@ export async function executeMintQuestAtlasPass({
 }: {
   client: SolanaClient
   route: QuestRoute
-  transactionSigner: ReturnType<typeof useWalletUiSigner>
+  transactionSigner: TransactionSigner
 }): Promise<MintQuestAtlasPassResult> {
   const asset = await generateKeyPairSigner()
   const metadata = createQuestAtlasMetadata(route, transactionSigner.address)
-  const uri = createMetadataUri(metadata)
+  const uri = createMetadataUri(route, transactionSigner.address)
   const { value: latestBlockhash } = await client.rpc.getLatestBlockhash({ commitment: 'confirmed' }).send()
   const instruction = getCreateV1Instruction({
     asset,
@@ -92,6 +93,10 @@ export async function executeMintQuestAtlasPass({
   }
 
   const confirmedAsset = await fetchAssetV1(client.rpc, asset.address, { commitment: 'confirmed' })
+  const confirmedMetadata = await fetchQuestAtlasMetadata(confirmedAsset.data.uri)
+  const metadataVerified =
+    confirmedMetadata?.properties.route.id === route.id &&
+    getRouteHash(confirmedMetadata.properties.route) === getRouteHash(route)
 
   return {
     assetAddress: asset.address,
@@ -100,6 +105,20 @@ export async function executeMintQuestAtlasPass({
     routeHash: getRouteHash(route),
     signature,
     uri: confirmedAsset.data.uri,
-    verified: confirmedAsset.data.owner === transactionSigner.address && confirmedAsset.data.uri === uri,
+    verified:
+      confirmedAsset.data.owner === transactionSigner.address && confirmedAsset.data.uri === uri && metadataVerified,
+  }
+}
+
+async function fetchQuestAtlasMetadata(uri: string) {
+  try {
+    const response = await fetch(uri)
+    if (!response.ok) {
+      return null
+    }
+
+    return (await response.json()) as QuestAtlasMetadata
+  } catch {
+    return null
   }
 }

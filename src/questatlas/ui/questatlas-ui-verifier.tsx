@@ -5,7 +5,7 @@ import { BadgeCheck, CircleAlert, Fingerprint, Loader2, WalletCards } from 'luci
 import type { MintQuestAtlasPassResult } from '@/questatlas/data-access/execute-mint-questatlas-pass'
 
 import { Button } from '@/core/ui/button'
-import { decodeMetadataUri, getRouteHash, type QuestRoute } from '@/questatlas/data-access/questatlas-route'
+import { getRouteHash, type QuestRoute } from '@/questatlas/data-access/questatlas-route'
 
 export function QuestAtlasUiVerifier({
   error,
@@ -26,9 +26,8 @@ export function QuestAtlasUiVerifier({
   routeReadiness: string
   signatureLink: ReactNode
 }) {
-  const decoded = result ? decodeMetadataUri(result.uri) : null
   const routeHash = getRouteHash(route)
-  const payloadMatches = decoded?.properties.route.id === route.id && result?.routeHash === routeHash
+  const payloadMatches = result?.verified === true && result.routeHash === routeHash
 
   return (
     <section className="border border-amber-200/20 bg-[#15170b] p-4">

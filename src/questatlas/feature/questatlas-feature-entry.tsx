@@ -1,6 +1,12 @@
 import { useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router'
 
-import { buildQuestRoute, getRouteReadiness } from '@/questatlas/data-access/questatlas-route'
+import {
+  buildQuestRoute,
+  buildQuestRouteFromParams,
+  getRouteReadiness,
+  parseQuestRouteParams,
+} from '@/questatlas/data-access/questatlas-route'
 import { QuestAtlasFeatureMint } from '@/questatlas/feature/questatlas-feature-mint'
 import { QuestAtlasUiBuilder } from '@/questatlas/ui/questatlas-ui-builder'
 import { QuestAtlasUiMap } from '@/questatlas/ui/questatlas-ui-map'
@@ -22,10 +28,19 @@ function Metric({ label, value }: { label: string; value: number | string }) {
 }
 
 function QuestAtlasFeatureEntry() {
-  const [seed, setSeed] = useState('run-093')
-  const [difficulty, setDifficulty] = useState(7)
-  const [operatorBias, setOperatorBias] = useState(42)
-  const route = useMemo(() => buildQuestRoute(seed, difficulty, operatorBias), [difficulty, operatorBias, seed])
+  const [searchParams] = useSearchParams()
+  const initialRouteParams = useMemo(() => parseQuestRouteParams(searchParams), [searchParams])
+  const [seed, setSeed] = useState(initialRouteParams?.s ?? 'run-093')
+  const [difficulty, setDifficulty] = useState(initialRouteParams?.d ?? 7)
+  const [operatorBias, setOperatorBias] = useState(initialRouteParams?.b ?? 42)
+  const [usesCompactSeed, setUsesCompactSeed] = useState(Boolean(initialRouteParams))
+  const route = useMemo(() => {
+    if (usesCompactSeed) {
+      return buildQuestRouteFromParams({ b: operatorBias, d: difficulty, s: seed })
+    }
+
+    return buildQuestRoute(seed, difficulty, operatorBias)
+  }, [difficulty, operatorBias, seed, usesCompactSeed])
   const readiness = useMemo(() => getRouteReadiness(route), [route])
   const client = useSolanaClient()
 
@@ -55,7 +70,10 @@ function QuestAtlasFeatureEntry() {
             seed={seed}
             setDifficulty={setDifficulty}
             setOperatorBias={setOperatorBias}
-            setSeed={setSeed}
+            setSeed={(value) => {
+              setUsesCompactSeed(false)
+              setSeed(value)
+            }}
           />
           <QuestAtlasUiMetadata route={route} />
           <SolanaUiWalletGuard
